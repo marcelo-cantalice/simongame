@@ -1,75 +1,86 @@
-var colorsDefined = ["green", "red", "yellow", "blue"]; //color that are used in Simon Game
-var sequenceRandom = []; //Array which will save the sequenceRandom of colors
-var score = 0; //How many points the  player has
+var baseColors = ["green", "red", "yellow", "blue"];
+var randomColors = [];
+var userClick = [];
+var gameStarted = false;
+var score = 0;
+var controllerLevel = 0;
 
-//1-> Green; 2->Red; 3->Yellow; 4->Blue
+//Start the Game
+$(document).keypress(function (event) {
+  if (!gameStarted) {
+    if(event.key==="r"){
+       location.reload();
+    }
+    randomColors = []; // reset random colors
+    score = 0; //reset score
+    controllerLevel = 0;
+    gameStarted = true;
+    console.log("<-----gameStarted------>");
+    randomizeColor();
+  }else{
+    $(document).off("keypress");
+  }
+
+});
+
+//Get the click on Button
+$(".btn").click(function (btClicked) {
+  if (gameStarted === true) {
+    var colorBtn = btClicked.currentTarget.id;
+    flashColor(colorBtn);
+    userClick.push(colorBtn);
+    checkAnswer(userClick.length - 1);
+  }
+});
+
+//Function to Randomize a  value and add
+//0->Green; 1->Red; 2-> Yellow; 3-> Blue
 function randomizeColor() {
-  //randomize color
-  sequenceRandom.push(colorsDefined[Math.floor(Math.random() * 4 + 1) - 1]);
-  $("h1").text("Level  " + sequenceRandom.length);
-  setTimeout(flashColor(sequenceRandom[sequenceRandom.length - 1]), 300);
-  console.log(sequenceRandom[sequenceRandom.length - 1]);
-  return sequenceRandom[sequenceRandom.length - 1];
+  userClick = [];
+  controllerLevel++;
+  $("h1").text("Level " + controllerLevel);
+  var randomValue = Math.floor(Math.random() * baseColors.length); //Randomize a number
+  var newColor = baseColors[randomValue]; //Get a Color in baseColors according the randomValue
+  randomColors.push(newColor); //Add the color in randomColors
+  flashColor(newColor);
+  console.log(randomColors);
 }
-
+//Flash the button and Play the sound
 function flashColor(color) {
-  /* for (let index = 0; index < sequenceRandom.length; index++) {
-    const element = sequenceRandom[index];
-    
-  }*/
   //flash color
   $("." + color).addClass("pressed");
+
   setTimeout(function () {
     $("." + color).removeClass("pressed");
   }, 100);
   //play sound
+  var soundPath = `./sounds/${color}.mp3`;
+  var audio = new Audio(soundPath);
+  audio.play();
 }
-function startGame() {
-  $("body").on("keypress", function (event) {
-    if (event.key === "a") {
-      console.log("<---------------Game Started--------------->");
-      var randomized = randomizeColor();
 
-      //console.log(randomized);
-      var userChoice;
-      $(".btn").click(function (event) {
-        // randomized = randomizeColor();
-        //flashColor(randomized);
-        //change h1 to "Level Score"
-        //$("h1").text("Level  " + sequenceRandom.length);
-        //console.log(randomized);
-        userChoice = event.currentTarget.classList;
-        flashColor(userChoice[1]);
-        if (userChoice.contains(randomized)) {
-          score++;
-          setTimeout(function () {
-            randomized = randomizeColor();
-          }, 500);
-          $("h1").text("Level  " + sequenceRandom.length);
-          // randomized = randomizeColor();
-          //console.log(randomized);
-          console.log("My score is " + score);
-        } else {
-          $("h1").text(
-            "You Lost! Your Score is " + score + ". Press A to start again!"
-          );
-          $("body").addClass("game-over");
-          $(".btn").off("click");
-          score = 0;
-          sequenceRandom = [];
-          $("body").on("keypress", function (event) {
-            if (event.key === "a") {
-              $("body").removeClass("game-over");
-              //startGame();
-            }
-          });
-          console.log(event.key);
-        }
-
-        //console.log(event.currentTarget.classList.contains(randomized));
-        //randomizeColor();
-      });
+//Fucntion to check the Answer
+function checkAnswer(positionColor) {
+  if (userClick[positionColor] === randomColors[positionColor]) {
+    if (userClick.length === randomColors.length) {
+      score++;
+      //Next Lvel
+      console.log("Next Level");
+      setTimeout(function () {
+        randomizeColor();
+      }, 1000);
     }
-  });
+  } else {
+    $("h1").text(
+      "You Lost! Your Score is " + score + ". Press R to start again!"
+    );
+    $("body").addClass("game-over");
+    setTimeout(function () {
+      $("body").removeClass("game-over");
+    }, 200);
+    $(".btn").off("click");
+    $(document).on("keypress");
+    gameStarted = false;
+    
+  }
 }
-startGame();
